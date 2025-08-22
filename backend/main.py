@@ -6,9 +6,7 @@ import uvicorn
 import os
 import sys
 
-# Add the parent directory to the path to import planetterp_core
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
+# Import planetterp_core (now in same directory)
 from planetterp_core import (
     load_model, get_courses, get_course, get_professor, get_course_grades,
     extract_course_ids, initialize_index, search, generate_response,
@@ -24,14 +22,22 @@ load_dotenv()
 
 app = FastAPI(title="PlanetTerp Chatbot API", version="1.0.0")
 
-# CORS middleware
+# CORS middleware - Updated for production
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=[
+        "http://localhost:3000", 
+        "http://127.0.0.1:3000",
+        "https://*.vercel.app",  # Allow all Vercel apps
+        "https://your-app-name.vercel.app"  # Replace with your actual Vercel URL
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Rest of your code stays the same...
+# (keeping the existing code from your main.py)
 
 # Global variables
 model = None
@@ -76,6 +82,11 @@ def get_random_umd_fact():
 def initialize_chat_model():
     global chat_model
     try:
+        api_key = os.getenv('GOOGLE_API_KEY')
+        if not api_key:
+            raise ValueError("GOOGLE_API_KEY environment variable not set")
+        
+        genai.configure(api_key=api_key)
         chat_model = genai.GenerativeModel(
             'gemini-2.0-flash',
             generation_config={
@@ -85,6 +96,7 @@ def initialize_chat_model():
                 "max_output_tokens": 1024,
             },
         ).start_chat(history=[])
+        return chat_model
     except Exception as e:
         print(f"Error initializing chat model: {e}")
         return None
@@ -104,20 +116,29 @@ async def startup_event():
     print("Initializing PlanetTerp Chatbot...")
     
     # Initialize the model
-    model = load_model()
-    if model:
-        print("Model loaded successfully")
+    try:
+        model = load_model()
+        if model:
+            print("Model loaded successfully")
+    except Exception as e:
+        print(f"Error loading model: {e}")
     
     # Initialize the index
-    courses = get_courses()
-    if courses:
-        index, course_ids = initialize_index(model, courses)
-        print(f"Index initialized with {len(course_ids)} courses")
+    try:
+        courses = get_courses()
+        if courses:
+            index, course_ids = initialize_index(model, courses)
+            print(f"Index initialized with {len(course_ids)} courses")
+    except Exception as e:
+        print(f"Error initializing index: {e}")
     
     # Initialize chat model
-    initialize_chat_model()
-    if chat_model:
-        print("Chat model initialized successfully")
+    try:
+        initialize_chat_model()
+        if chat_model:
+            print("Chat model initialized successfully")
+    except Exception as e:
+        print(f"Error initializing chat model: {e}")
 
 @app.get("/")
 async def root():
@@ -125,7 +146,12 @@ async def root():
 
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy", "model_loaded": model is not None, "index_loaded": index is not None}
+    return {
+        "status": "healthy", 
+        "model_loaded": model is not None, 
+        "index_loaded": index is not None,
+        "chat_model_loaded": chat_model is not None
+    }
 
 @app.get("/fun-fact", response_model=FunFactResponse)
 async def get_fun_fact():
@@ -140,7 +166,10 @@ async def chat(request: ChatRequest):
         ensure_index_initialized()
         
         if not chat_model:
-            initialize_chat_model()
+            chat_model = initialize_chat_model()
+        
+        if not chat_model:
+            raise HTTPException(status_code=500, detail="Chat model not available")
         
         # Create chat history for the model
         chat_history = []
@@ -149,6 +178,11 @@ async def chat(request: ChatRequest):
             chat_history.append({"role": role, "parts": [msg.content]})
         
         # Create a new chat model with history
+        api_key = os.getenv('GOOGLE_API_KEY')
+        if not api_key:
+            raise HTTPException(status_code=500, detail="API key not configured")
+        
+        genai.configure(api_key=api_key)
         current_chat = genai.GenerativeModel(
             'gemini-2.0-flash',
             generation_config={
@@ -168,7 +202,7 @@ async def chat(request: ChatRequest):
             index, 
             course_ids, 
             model
-        )
+        ) if index and course_ids else []
         
         # Combine results
         all_course_ids = direct_course_ids + semantic_course_ids
@@ -176,20 +210,29 @@ async def chat(request: ChatRequest):
 
         # Get course details
         for course_id in all_course_ids[:3]:  # Limit to top 3 results
-            course = get_course(course_id)
-            if course:
-                data["courses"].append(course)
-                
-                # Get grades for this course
-                grades = get_course_grades(course_id)
-                if grades:
-                    data["grades"].extend(grades[:5])  # Limit to 5 most recent grade entries
-                
-                # Get professors for this course
-                for prof_name in course.get("professors", [])[:5]:  # Limit to 5 professors
-                    prof = get_professor(prof_name)
-                    if prof:
-                        data["professors"].append(prof)
+            try:
+                course = get_course(course_id)
+                if course:
+                    data["courses"].append(course)
+                    
+                    # Get grades for this course
+                    try:
+                        grades = get_course_grades(course_id)
+                        if grades:
+                            data["grades"].extend(grades[:5])  # Limit to 5 most recent grade entries
+                    except Exception as e:
+                        print(f"Error getting grades for {course_id}: {e}")
+                    
+                    # Get professors for this course
+                    for prof_name in course.get("professors", [])[:5]:  # Limit to 5 professors
+                        try:
+                            prof = get_professor(prof_name)
+                            if prof:
+                                data["professors"].append(prof)
+                        except Exception as e:
+                            print(f"Error getting professor {prof_name}: {e}")
+            except Exception as e:
+                print(f"Error processing course {course_id}: {e}")
         
         # Generate response
         response = generate_response(request.message, data, current_chat)
@@ -197,16 +240,41 @@ async def chat(request: ChatRequest):
         # Generate chat name if this is the first message
         chat_name = None
         if not request.chat_history:
-            chat_name = generate_chat_name(request.message)
+            try:
+                chat_name = generate_chat_name(request.message)
+            except Exception as e:
+                print(f"Error generating chat name: {e}")
+                chat_name = "New Chat"
         
         return ChatResponse(response=response, chat_name=chat_name)
         
+    except HTTPException:
+        raise
     except Exception as e:
+        print(f"Unexpected error in chat endpoint: {e}")
         raise HTTPException(status_code=500, detail=f"Error processing chat: {str(e)}")
 
 @app.get("/greeting")
 async def get_greeting_endpoint():
-    return {"greeting": get_greeting()}
+    try:
+        return {"greeting": get_greeting()}
+    except Exception as e:
+        print(f"Error getting greeting: {e}")
+        return {"greeting": "Welcome to PlanetTerp Chatbot!"}
+
+# Health check endpoint with more details
+@app.get("/debug")
+async def debug_info():
+    return {
+        "environment_variables": {
+            "GOOGLE_API_KEY": "set" if os.getenv('GOOGLE_API_KEY') else "not set",
+            "PORT": os.getenv('PORT', 'not set')
+        },
+        "python_version": sys.version,
+        "working_directory": os.getcwd(),
+        "files_in_directory": os.listdir('.') if os.path.exists('.') else []
+    }
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000) 
+    port = int(os.getenv("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
