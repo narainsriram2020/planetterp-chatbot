@@ -24,7 +24,7 @@ export default function Sidebar() {
   }, [])
 
   return (
-    <div className="w-80 bg-gray-50 border-l border-gray-200 p-6 overflow-y-auto">
+    <div className="w-80 glass border-l border-white/20 p-6 overflow-y-auto custom-scrollbar">
       {/* Fun Fact Section */}
       <div className="mb-8">
         <div className="flex items-center gap-2 mb-3">
@@ -38,8 +38,8 @@ export default function Sidebar() {
             <RefreshCw className={isLoadingFact ? "w-4 h-4 animate-spin" : "w-4 h-4"} />
           </button>
         </div>
-        <div className="bg-white rounded-lg p-4 border border-gray-200">
-          <p className="text-sm text-gray-700 italic">"{funFact}"</p>
+        <div className="glass rounded-2xl p-4 shadow-lg">
+          <p className="text-sm text-black italic leading-relaxed">"{funFact}"</p>
         </div>
       </div>
 
@@ -49,7 +49,7 @@ export default function Sidebar() {
           <BookOpen className="w-5 h-5 text-umd-red" />
           <h3 className="font-semibold text-gray-900">How to Use</h3>
         </div>
-        <div className="space-y-3 text-sm text-gray-700">
+        <div className="space-y-3 text-sm text-black">
           <div>
             <p className="font-medium text-gray-900">🔍 Ask about courses:</p>
             <ul className="ml-4 mt-1 space-y-1">
@@ -117,7 +117,7 @@ export default function Sidebar() {
           <Calendar className="w-5 h-5 text-umd-red" />
           <h3 className="font-semibold text-gray-900">Important Dates</h3>
         </div>
-        <div className="space-y-2 text-sm text-gray-700">
+        <div className="space-y-2 text-sm text-black">
           <div className="flex items-center gap-2">
             <span>🏝️</span>
             <span>Spring Break: March 16-23</span>

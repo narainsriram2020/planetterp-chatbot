@@ -6,6 +6,7 @@ import { sendChatMessage, getGreeting, checkHealth } from '@/lib/api'
 import ChatMessage from '@/components/ChatMessage'
 import ChatInput from '@/components/ChatInput'
 import Sidebar from '@/components/Sidebar'
+import QuickReplies from '@/components/QuickReplies'
 import { Bot, AlertCircle } from 'lucide-react'
 
 export default function Home() {
@@ -29,7 +30,7 @@ export default function Home() {
         // Check backend health
         const health = await checkHealth()
         setIsBackendHealthy(health.status === 'healthy')
-        
+
         // Get greeting
         const greetingResponse = await getGreeting()
         setGreeting(greetingResponse.greeting)
@@ -57,7 +58,7 @@ export default function Home() {
 
     try {
       const response = await sendChatMessage(message, messages)
-      
+
       const assistantMessage: ChatMessageType = {
         role: 'assistant',
         content: response.response,
@@ -67,7 +68,7 @@ export default function Home() {
       setMessages(prev => [...prev, assistantMessage])
     } catch (error) {
       console.error('Failed to send message:', error)
-      
+
       const errorMessage: ChatMessageType = {
         role: 'assistant',
         content: 'Sorry, I encountered an error while processing your request. Please try again.',
@@ -81,45 +82,51 @@ export default function Home() {
   }
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50 chat-background">
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <header className="bg-white border-b border-gray-200 px-6 py-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-umd-red rounded-full flex items-center justify-center">
-              <Bot className="w-6 h-6 text-white" />
+        <header className="glass border-b border-white/20 px-8 py-6">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 glass rounded-full flex items-center justify-center shadow-lg">
+              <div className="w-8 h-8 bg-umd-red rounded-full flex items-center justify-center">
+                <span className="text-white text-xs font-bold">UMD</span>
+              </div>
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900">PlanetTerp Chatbot</h1>
-              <p className="text-sm text-gray-600">
-                {greeting}! Ask me anything about UMD courses and professors.
+              <h1 className="text-2xl font-bold text-gray-900 tracking-tight">PlanetTerp Assistant</h1>
+              <p className="text-gray-600 font-medium">
+                {greeting}! I'm here to help with your UMD journey.
               </p>
             </div>
             {!isBackendHealthy && (
-              <div className="ml-auto flex items-center gap-2 text-orange-600">
+              <div className="ml-auto flex items-center gap-2 text-orange-600 bg-orange-50 px-3 py-2 rounded-full">
                 <AlertCircle className="w-4 h-4" />
-                <span className="text-sm">Backend connection issues</span>
+                <span className="text-sm font-medium">Connection issues</span>
               </div>
             )}
           </div>
         </header>
 
         {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto custom-scrollbar">
           {messages.length === 0 ? (
             <div className="flex items-center justify-center h-full">
-              <div className="text-center">
-                <div className="w-16 h-16 bg-umd-red rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Bot className="w-8 h-8 text-white" />
+              <div className="text-center max-w-md">
+                <div className="w-20 h-20 glass rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl">
+                  <div className="w-12 h-12 bg-umd-red rounded-full flex items-center justify-center">
+                    <span className="text-white text-sm font-bold">UMD</span>
+                  </div>
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Welcome to PlanetTerp Chatbot!
+                <h3 className="text-2xl font-bold text-gray-900 mb-4 tracking-tight">
+                  Welcome to PlanetTerp
                 </h3>
-                <p className="text-gray-600 max-w-md">
-                  I'm here to help you find information about UMD courses, professors, and more. 
-                  Try asking me about a specific course or professor!
+                <p className="text-gray-600 text-lg leading-relaxed mb-6">
+                  Your intelligent assistant for everything UMD. From course selection to campus life, I'm here to help you navigate your academic journey.
                 </p>
+                <div className="glass rounded-2xl p-4">
+                  <p className="text-sm text-gray-500 font-medium">Ready to get started?</p>
+                </div>
               </div>
             </div>
           ) : (
@@ -128,15 +135,17 @@ export default function Home() {
                 <ChatMessage key={index} message={message} />
               ))}
               {isLoading && (
-                <div className="flex gap-3 p-4">
-                  <div className="w-8 h-8 bg-umd-red rounded-full flex items-center justify-center">
-                    <Bot className="w-5 h-5 text-white" />
+                <div className="flex gap-3 p-4 animate-fade-in">
+                  <div className="w-10 h-10 glass rounded-full flex items-center justify-center shadow-lg">
+                    <div className="w-6 h-6 bg-umd-red rounded-full flex items-center justify-center">
+                      <span className="text-white text-xs font-bold">UMD</span>
+                    </div>
                   </div>
-                  <div className="bg-gray-100 rounded-lg px-4 py-3">
-                    <div className="flex space-x-1">
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                  <div className="glass rounded-3xl rounded-bl-lg px-6 py-4 shadow-xl">
+                    <div className="flex space-x-2">
+                      <div className="w-2 h-2 bg-umd-red rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-umd-red rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                      <div className="w-2 h-2 bg-umd-red rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                     </div>
                   </div>
                 </div>
@@ -146,9 +155,16 @@ export default function Home() {
           <div ref={messagesEndRef} />
         </div>
 
+        {/* Quick Reply Buttons */}
+        {messages.length === 0 && (
+          <div className="border-t bg-white p-4">
+            <QuickReplies onSendMessage={handleSendMessage} />
+          </div>
+        )}
+
         {/* Chat Input */}
-        <ChatInput 
-          onSendMessage={handleSendMessage} 
+        <ChatInput
+          onSendMessage={handleSendMessage}
           isLoading={isLoading}
           disabled={!isBackendHealthy}
         />

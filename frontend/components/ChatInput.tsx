@@ -26,25 +26,25 @@ export default function ChatInput({ onSendMessage, isLoading, disabled }: ChatIn
   }
 
   return (
-    <div className="border-t bg-white p-4">
-      <div className="flex gap-2">
+    <div className="glass border-t border-white/20 p-6">
+      <div className="flex gap-3">
         <textarea
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onKeyPress={handleKeyPress}
-          placeholder="Ask about UMD courses..."
-          className="flex-1 resize-none rounded-lg border border-gray-300 px-4 py-3 focus:border-umd-red focus:outline-none focus:ring-2 focus:ring-umd-red/20"
+          placeholder="Ask me anything about UMD..."
+          className="flex-1 resize-none rounded-2xl border-0 px-6 py-4 focus:outline-none focus:ring-2 focus:ring-umd-red/20 text-black bg-white/80 backdrop-blur-sm shadow-lg"
           rows={1}
           disabled={isLoading || disabled}
-          style={{ minHeight: '48px', maxHeight: '120px' }}
+          style={{ minHeight: '56px', maxHeight: '120px' }}
         />
         <button
           onClick={handleSend}
           disabled={!message.trim() || isLoading || disabled}
           className={cn(
-            "flex-shrink-0 rounded-lg px-4 py-3 transition-colors",
+            "flex-shrink-0 rounded-2xl px-6 py-4 transition-all duration-200 shadow-lg",
             message.trim() && !isLoading && !disabled
-              ? "bg-umd-red text-white hover:bg-red-700"
+              ? "bg-umd-red text-white hover:bg-red-700 hover:scale-105 active:scale-95"
               : "bg-gray-200 text-gray-400 cursor-not-allowed"
           )}
         >

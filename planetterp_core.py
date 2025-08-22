@@ -133,20 +133,22 @@ def search(query, index, course_ids, model, k=5):
     
     return results
 
-def get_rating_emoji(rating):
-    """Convert numerical rating to emoji for visual representation"""
+def get_rating_description(rating):
+    """Convert numerical rating to descriptive text"""
     if not rating or rating < 0:
-        return " ❓"  # Unknown rating
+        return " (No rating available)"
     elif rating >= 4.5:
-        return " 🌟"  # Excellent
+        return f" (Rating: {rating:.1f}/5.0 - Excellent)"
     elif rating >= 4.0:
-        return " ⭐"  # Very Good
+        return f" (Rating: {rating:.1f}/5.0 - Very Good)"
+    elif rating >= 3.5:
+        return f" (Rating: {rating:.1f}/5.0 - Good)"
     elif rating >= 3.0:
-        return " ✅"  # Good/Average
+        return f" (Rating: {rating:.1f}/5.0 - Average)"
     elif rating >= 2.0:
-        return " ⚠️"  # Below Average
+        return f" (Rating: {rating:.1f}/5.0 - Below Average)"
     else:
-        return " ❗"  # Poor
+        return f" (Rating: {rating:.1f}/5.0 - Poor)"
 
 # Generate response
 def generate_response(query, data, chat_model):
@@ -161,24 +163,35 @@ def generate_response(query, data, chat_model):
     they should visit the PlanetTerp website to get more info, but this should be the last resort option.
     Sound very laid back and chill like your are another student.
     When a student asks about what professor they should take for a certain course give them your personal evaluation of the best professor.
-    When mentioning professors, always include their rating emoji beside their name using this format:
-    Professor Name [emoji] - where emoji indicates their average rating.
+    When mentioning professors, use the rating_description field which includes the professor name and their numerical rating with quality description.
+    When mentioning professor names, format them as <strong>Professor Name</strong> to make them bold.
     """
     
     for prof in data["professors"]:
         if "average_rating" in prof:
-            prof["rating_emoji"] = get_rating_emoji(prof["average_rating"])
+            prof["rating_description"] = get_rating_description(prof["average_rating"])
         else:
-            prof["rating_emoji"] = "❓"
+            prof["rating_description"] = " (No rating available)"
     
-    context = {
+    # Create a clean context without emoji encoding issues
+    clean_context = {
         "courses": data["courses"],
-        "professors": data["professors"],
+        "professors": [],
         "grades": data["grades"]
     }
     
+    # Add professors with proper rating formatting
+    for prof in data["professors"]:
+        clean_prof = prof.copy()
+        if "average_rating" in prof:
+            rating_desc = get_rating_description(prof["average_rating"])
+            clean_prof["rating_description"] = f"{prof['name']}{rating_desc}"
+        else:
+            clean_prof["rating_description"] = f"{prof['name']} (No rating available)"
+        clean_context["professors"].append(clean_prof)
+    
     prompt = f"""
-    PlanetTerp Data: {json.dumps(context, indent=2)}
+    PlanetTerp Data: {json.dumps(clean_context, indent=2, ensure_ascii=False)}
     Question: {query}
     """
     

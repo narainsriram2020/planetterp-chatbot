@@ -1,6 +1,7 @@
 import { ChatMessage as ChatMessageType } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 import { User, Bot } from 'lucide-react'
+import Image from 'next/image'
 
 interface ChatMessageProps {
   message: ChatMessageType
@@ -8,41 +9,56 @@ interface ChatMessageProps {
 
 export default function ChatMessage({ message }: ChatMessageProps) {
   const isUser = message.role === 'user'
-  
+
   return (
     <div className={cn(
-      "flex gap-3 p-4",
+      "flex gap-3 p-4 animate-fade-in",
       isUser ? "justify-end" : "justify-start"
     )}>
       {!isUser && (
         <div className="flex-shrink-0">
-          <div className="w-8 h-8 bg-umd-red rounded-full flex items-center justify-center">
-            <Bot className="w-5 h-5 text-white" />
+          <div className="w-10 h-10 glass rounded-full flex items-center justify-center shadow-lg overflow-hidden">
+            <Image
+              src="/umd-logo.png"
+              alt="UMD Logo"
+              width={24}
+              height={24}
+              className="rounded-full"
+              onError={(e) => {
+                // Fallback to text if image fails to load
+                const target = e.target as HTMLImageElement;
+                target.style.display = 'none';
+                target.nextElementSibling?.classList.remove('hidden');
+              }}
+            />
+            <div className="w-6 h-6 bg-umd-red rounded-full flex items-center justify-center hidden">
+              <span className="text-white text-xs font-bold">UMD</span>
+            </div>
           </div>
         </div>
       )}
-      
+
       <div className={cn(
-        "max-w-[80%] rounded-lg px-4 py-3",
-        isUser 
-          ? "bg-umd-red text-white" 
-          : "bg-gray-100 text-gray-900"
+        "max-w-[80%] px-6 py-4 transition-all duration-300",
+        isUser
+          ? "glass-dark text-white rounded-3xl rounded-br-lg shadow-xl"
+          : "glass text-black rounded-3xl rounded-bl-lg shadow-xl"
       )}>
-        <p className="whitespace-pre-wrap">{message.content}</p>
+        <p className="whitespace-pre-wrap leading-relaxed text-base">{message.content}</p>
         {message.timestamp && (
           <p className={cn(
-            "text-xs mt-2",
-            isUser ? "text-red-100" : "text-gray-500"
+            "text-xs mt-3 opacity-60 font-medium",
+            isUser ? "text-gray-300" : "text-gray-500"
           )}>
             {message.timestamp.toLocaleTimeString()}
           </p>
         )}
       </div>
-      
+
       {isUser && (
         <div className="flex-shrink-0">
-          <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-            <User className="w-5 h-5 text-gray-600" />
+          <div className="w-10 h-10 glass rounded-full flex items-center justify-center shadow-lg">
+            <User className="w-5 h-5 text-gray-700" />
           </div>
         </div>
       )}
