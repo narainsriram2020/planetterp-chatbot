@@ -13,7 +13,8 @@
         "start": "cd frontend && npm start"
     },
     "devDependencies": {
-        "concurrently": "^8.2.2"
+        "concurrently": "^8.2.2",
+        "parcel": "^2.15.4"
     },
     "keywords": [
         "chatbot",
