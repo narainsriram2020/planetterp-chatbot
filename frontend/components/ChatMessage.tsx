@@ -1,7 +1,6 @@
 import { ChatMessage as ChatMessageType } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 import { User, Bot } from 'lucide-react'
-import Image from 'next/image'
 
 interface ChatMessageProps {
   message: ChatMessageType
@@ -17,21 +16,8 @@ export default function ChatMessage({ message }: ChatMessageProps) {
     )}>
       {!isUser && (
         <div className="flex-shrink-0">
-          <div className="w-10 h-10 glass rounded-full flex items-center justify-center shadow-lg overflow-hidden">
-            <Image
-              src="/umd-logo.png"
-              alt="UMD Logo"
-              width={24}
-              height={24}
-              className="rounded-full"
-              onError={(e) => {
-                // Fallback to text if image fails to load
-                const target = e.target as HTMLImageElement;
-                target.style.display = 'none';
-                target.nextElementSibling?.classList.remove('hidden');
-              }}
-            />
-            <div className="w-6 h-6 bg-umd-red rounded-full flex items-center justify-center hidden">
+          <div className="w-10 h-10 glass rounded-full flex items-center justify-center shadow-lg">
+            <div className="w-6 h-6 bg-umd-red rounded-full flex items-center justify-center">
               <span className="text-white text-xs font-bold">UMD</span>
             </div>
           </div>
