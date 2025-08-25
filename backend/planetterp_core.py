@@ -249,4 +249,4 @@ def get_greeting():
             return "Good evening"
     except Exception as e:
         print(f"Error getting greeting: {e}")
-        return "Hello"
+        return "hi"
